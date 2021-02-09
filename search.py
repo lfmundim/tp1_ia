@@ -73,6 +73,17 @@ def tinyMazeSearch(problem):
     return [s, s, w, s, w, w, s, w]
 
 
+def setUpSearch(problem):
+    start_state = problem.getStartState()
+
+    # is the starting coord, the goal?
+    if problem.isGoalState(start_state):
+        # if yes, nothing needs to be done!
+        return None, []
+
+    return start_state, []
+
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -107,16 +118,12 @@ def dfs_or_bfs(problem, data_type):
     using Stack or Queue, we can unify the code for both
     """
     # set up
-    startState = problem.getStartState()
-    visited = []
+    start_state, visited = setUpSearch(problem)
+    # start_state is goal
+    if start_state is None:
+        return visited
 
-    # is the starting coord, the goal?
-    if problem.isGoalState(startState):
-        # if yes, nothing needs to be done!
-        return []
-
-    # if not, start with the starting state
-    data_type.push((startState, []))
+    data_type.push((start_state, []))
 
     while not data_type.isEmpty():
         current, actions = data_type.pop()
@@ -132,17 +139,45 @@ def dfs_or_bfs(problem, data_type):
 
             # no solution yet, keep diggin'
             for next_node, action, cost in problem.getSuccessors(current):
-                next_action = actions + [action]
+                new_action = actions + [action]
                 # add every possible exit for the current node into the data structure
                 # BFS: uses queue, therefore it will use the "oldest" node every new iteration
                 # DFS: uses stack, therefore it will use the "newest" node every new iteration
-                data_type.push((next_node, next_action))
+                data_type.push((next_node, new_action))
 
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # set up
+    priority_queue = util.PriorityQueue()
+    start_state, visited = setUpSearch(problem)
+    # start_state is goal
+    if start_state is None:
+        return visited
+
+    priority_queue.push((start_state, [], 0), 0)
+
+    # UCS is basically the same as BFS, it even uses a form of queue
+    # the difference is that UCS has weighted decisions, going the oposite
+    # route when compared with Greedy algorithms
+    while not priority_queue.isEmpty():
+        current, actions, previous_cost = priority_queue.pop()
+
+        # keep track of visited nodes
+        if current not in visited:
+            visited.append(current)
+
+            # did we reach the goal?
+            if problem.isGoalState(current):
+                # yes! give pacman the solution!
+                return actions
+
+            # no solution yet, keep diggin'
+            for next_node, action, cost in problem.getSuccessors(current):
+                priority = previous_cost + cost
+                new_action = actions + [action]
+                priority_queue.push((next_node, new_action, priority), priority)
 
 
 def nullHeuristic(state, problem=None):
