@@ -146,21 +146,24 @@ def dfs_or_bfs(problem, data_type):
                 data_type.push((next_node, new_action))
 
 
-def uniformCostSearch(problem):
-    """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    # set up
-    priority_queue = util.PriorityQueue()
-    start_state, visited = setUpSearch(problem)
-    # start_state is goal
-    if start_state is None:
-        return visited
+def nullHeuristic(state, problem=None):
+    """
+    A heuristic function estimates the cost from the current state to the nearest
+    goal in the provided SearchProblem.  This heuristic is trivial.
+    """
+    return 0
 
-    priority_queue.push((start_state, [], 0), 0)
 
-    # UCS is basically the same as BFS, it even uses a form of queue
-    # the difference is that UCS has weighted decisions, going the oposite
-    # route when compared with Greedy algorithms
+def ucsPriorityCalc(previous_cost, cost, heuristics, next_node, problem):
+    return previous_cost + cost
+
+
+def greedyPriorityCalc(previous_cost, cost, heuristics, next_node, problem):
+    return heuristics(next_node, problem)
+
+
+# All priority queues use the same basic loop, with a few minor tweaks
+def priorityLoop(problem, priority_queue, visited, algorithm='ucs', heuristics=nullHeuristic):
     while not priority_queue.isEmpty():
         current, actions, previous_cost = priority_queue.pop()
 
@@ -175,29 +178,57 @@ def uniformCostSearch(problem):
 
             # no solution yet, keep diggin'
             for next_node, action, cost in problem.getSuccessors(current):
-                priority = previous_cost + cost
+                priority = (previous_cost + cost if algorithm is 'ucs'
+                            else heuristics(next_node, problem) if algorithm is 'greedy'
+                            else previous_cost + cost + heuristics(next_node, problem))
+                cost_to_node = previous_cost + cost if algorithm is 'a*' else priority
                 new_action = actions + [action]
-                priority_queue.push((next_node, new_action, priority), priority)
+                priority_queue.push((next_node, new_action, cost_to_node), priority)
 
 
-def nullHeuristic(state, problem=None):
-    """
-    A heuristic function estimates the cost from the current state to the nearest
-    goal in the provided SearchProblem.  This heuristic is trivial.
-    """
-    return 0
+def uniformCostSearch(problem):
+    """Search the node of least total cost first."""
+    "*** YOUR CODE HERE ***"
+    # set up
+    priority_queue = util.PriorityQueue()
+    start_state, visited = setUpSearch(problem)
+    # start_state is goal
+    if start_state is None:
+        return visited
+
+    priority_queue.push((start_state, [], 0), 0)
+
+    # UCS is basically the same as BFS, it even uses a form of queue
+    # the difference is that UCS has weighted decisions
+    return priorityLoop(problem, priority_queue, visited)
 
 
 def greedySearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # set up
+    priority_queue = util.PriorityQueue()
+    start_state, visited = setUpSearch(problem)
+    # start_state is goal
+    if start_state is None:
+        return visited
+
+    priority_queue.push((start_state, [], 0), 0)
+    return priorityLoop(problem, priority_queue, visited, 'greedy', heuristic)
 
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # set up
+    priority_queue = util.PriorityQueue()
+    start_state, visited = setUpSearch(problem)
+    # start_state is goal
+    if start_state is None:
+        return visited
+
+    priority_queue.push((start_state, [], 0), 0)
+    return priorityLoop(problem, priority_queue, visited, 'a*', heuristic)
 
 
 def foodHeuristic(state, problem):
