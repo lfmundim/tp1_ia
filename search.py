@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -88,13 +88,55 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    stack = util.Stack()
+
+    return dfs_or_bfs(problem, stack)
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    queue = util.Queue()
+
+    return dfs_or_bfs(problem, queue)
+
+
+def dfs_or_bfs(problem, data_type):
+    """
+    Since the main difference of implementing BFS and DFS is
+    using Stack or Queue, we can unify the code for both
+    """
+    # set up
+    startState = problem.getStartState()
+    visited = []
+
+    # is the starting coord, the goal?
+    if problem.isGoalState(startState):
+        # if yes, nothing needs to be done!
+        return []
+
+    # if not, start with the starting state
+    data_type.push((startState, []))
+
+    while not data_type.isEmpty():
+        current, actions = data_type.pop()
+
+        # keep track of visited nodes
+        if current not in visited:
+            visited.append(current)
+
+            # did we reach the goal?
+            if problem.isGoalState(current):
+                # yes! give pacman the solution!
+                return actions
+
+            # no solution yet, keep diggin'
+            for next_node, action, cost in problem.getSuccessors(current):
+                next_action = actions + [action]
+                # add every possible exit for the current node into the data structure
+                # BFS: uses queue, therefore it will use the "oldest" node every new iteration
+                # DFS: uses stack, therefore it will use the "newest" node every new iteration
+                data_type.push((next_node, next_action))
 
 
 def uniformCostSearch(problem):
